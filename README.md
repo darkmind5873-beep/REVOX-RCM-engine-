@@ -48,3 +48,58 @@ frontend   User interface
 model      Training scripts and datasets
 assets     Screenshots and diagrams
 
+for a better File Directory ,follow this for bettter management
+
+RCMv2
+│
+├── node_modules
+│
+├── src
+│   ├── components
+│   │   ├── AnalyzeSection.tsx
+│   │   ├── AppHeader.tsx
+│   │   ├── BatchSection.tsx
+│   │   ├── ClayCard.tsx
+│   │   ├── DashboardSection.tsx
+│   │   ├── ErrorAlert.tsx
+│   │   ├── index.ts
+│   │   └── ResultsSection.tsx
+│   │
+│   ├── engines
+│   │   ├── denialRiskEngine.ts
+│   │   ├── eligibilityEngine.ts
+│   │   └── preventionEngine.ts
+│   │
+│   ├── ml
+│   │   ├── __pycache__
+│   │   ├── api.py
+│   │   ├── claims_training_data.xlsx
+│   │   ├── denial_model.pkl
+│   │   ├── patient_claims_data.xlsx
+│   │   └── train_model.py
+│   │
+│   ├── parsers
+│   │   ├── excelParser.ts
+│   │   └── pdfParser.ts
+│   │
+│   ├── types
+│   │   └── claim.ts
+│   │
+│   ├── utils
+│   │   ├── cn.ts
+│   │   ├── fieldMapper.ts
+│   │   ├── sampleData.ts
+│   │   └── security.ts
+│   │
+│   ├── validators
+│   │
+│   ├── App.tsx
+│   ├── index.css
+│   └── main.tsx
+│
+├── denial_model.pkl
+├── index.html
+├── package-lock.json
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
