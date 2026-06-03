@@ -48,8 +48,21 @@ export default function DashboardSection({ stats }: Props) {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="dashboard-stats-grid">
+    // FIX: Added pt-8 (padding-top) to instantly open up the spacing gap below the menu toggle buttons.
+    // FIX: Increased the gap between sections using display flex column + 40px row gap layout.
+    <div style={{ display: "flex", flexDirection: "column", gap: "40px", paddingTop: "32px" }}>
+      
+      {/* 1. Spacing Between Top Summary Cards */}
+      {/* FIX: Forced inline grid override style to guarantee deep structural layout column gaps */}
+      <div 
+        className="dashboard-stats-grid"
+        style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", 
+          gap: "28px",
+          width: "100%"
+        }}
+      >
         <StatCard
           title="Claims Analyzed"
           value={stats.totalClaimsAnalyzed.toLocaleString()}
@@ -80,7 +93,17 @@ export default function DashboardSection({ stats }: Props) {
         />
       </div>
 
-      <div className="dashboard-chart-grid">
+      {/* 2. Spacing Between Upper and Lower Sections */}
+      {/* FIX: Forced explicit custom structural grid column layout gaps on the lower chart items */}
+      <div 
+        className="dashboard-chart-grid"
+        style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", 
+          gap: "28px",
+          width: "100%" 
+        }}
+      >
         <ClayCard>
           <div className="mb-4">
             <h3

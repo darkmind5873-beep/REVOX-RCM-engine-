@@ -7,7 +7,6 @@
     "skipLibCheck": true,
     "types": ["node"],
 
-
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
@@ -15,12 +14,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
-
 
     "strict": true,
     "noUnusedLocals": true,

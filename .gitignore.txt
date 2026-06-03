@@ -1,0 +1,6 @@
+node_modules/
+.env
+__pycache__/
+*.pyc
+.venv/
+denial_model.pkl  # Only if you use LFS, otherwise keep it if it's small
