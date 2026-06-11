@@ -7,7 +7,7 @@ import type { ClaimData, ClaimAnalysisResult, BatchResult } from "./types/claim"
 import { parseExcelOrCSV, generateSampleTemplate } from "./parsers/excelParser";
 import { parsePDF } from "./parsers/pdfParser";
 import { checkEligibility } from "./engines/eligibilityEngine";
-import { getRiskBreakdown } from "./engines/denialRiskEngine";
+import { getRiskBreakdown, predictDenialRisk } from "./engines/denialRiskEngine";
 import { generatePreventionActions } from "./engines/preventionEngine";
 import {
   generateSecureId,
@@ -107,16 +107,14 @@ function App() {
   }, []);
 
   const getRiskLevel = (probability: number): "low" | "medium" | "high" => {
-    if (probability >= 0.75) return "high";
-    if (probability >= 0.4) return "medium";
+    if (probability >= 75) return "high";
+    if (probability >= 40) return "medium";
     return "low";
   };
 
   const buildAnalysisResult = useCallback(
     async (claimToAnalyze: ClaimData): Promise<ClaimAnalysisResult | null> => {
       const rateCheck = checkRateLimit(getClientIdentifier(), "CLAIM_ANALYSIS");
-      console.log("Sending to API:", claimToAnalyze);
-      console.log("URL:", `${API_BASE_URL}/predict`);
 
       if (!rateCheck.allowed) {
         setError(
@@ -124,37 +122,20 @@ function App() {
             (rateCheck.resetTime - Date.now()) / 1000
           )} seconds.`
         );
-        
         return null;
       }
 
-      try {console.log("Sending claim to API:", claimToAnalyze);
-        console.log("API URL:", `${API_BASE_URL}/predict`);
-        const response = await fetch(`${API_BASE_URL}/predict`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(claimToAnalyze)
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Prediction API failed with status ${response.status}: ${errorText}`);
-        }
-
-        const prediction = await response.json();
-
+      try {
+        const prediction = predictDenialRisk(claimToAnalyze);
         const eligibility = checkEligibility(claimToAnalyze);
-        const denialProbability = Number(prediction.denial_probability ?? 0);
-        const riskLevel = getRiskLevel(denialProbability);
+        const riskLevel = getRiskLevel(prediction.riskScore);
 
         const riskPrediction = {
-          riskScore: Math.round(denialProbability * 100),
-          riskLevel,
-          confidenceScore: Math.max(60, Math.round(denialProbability * 100)),
-          reasons: Array.isArray(prediction.risk_factors) ? prediction.risk_factors : [],
-          triggeredFactors: Array.isArray(prediction.risk_factors) ? prediction.risk_factors : [],
+          riskScore: prediction.riskScore,
+          riskLevel: riskLevel,
+          confidenceScore: prediction.confidenceScore,
+          reasons: prediction.reasons,
+          triggeredFactors: prediction.reasons,
           timestamp: new Date().toISOString()
         };
 
@@ -181,44 +162,36 @@ function App() {
   );
 
   const handleManualAnalyze = useCallback(async () => {
-  console.log("Run Smart Analysis clicked");
-  console.log("Current claim:", claim);
+    console.log("Run Smart Analysis clicked");
+    setIsProcessing(true);
+    setError(null);
 
-  setIsProcessing(true);
-  setError(null);
+    try {
+      if (
+        !claim.patientName.trim() ||
+        !claim.patientId.trim() ||
+        !claim.payerName.trim() ||
+        !claim.cptCode.trim() ||
+        !claim.providerNpi.trim() ||
+        !claim.placeOfService.trim() ||
+        claim.icd10Codes.length === 0
+      ) {
+        setError("Please complete all required claim fields before analysis");
+        return;
+      }
 
-  try {
-    if (
-      !claim.patientName.trim() ||
-      !claim.patientId.trim() ||
-      !claim.payerName.trim() ||
-      !claim.cptCode.trim() ||
-      !claim.providerNpi.trim() ||
-      !claim.placeOfService.trim() ||
-      claim.icd10Codes.length === 0
-    ) {
-      console.log("Validation blocked request");
-      setError("Please complete all required claim fields before analysis");
-      return;
+      const result = await buildAnalysisResult(claim);
+      if (result) {
+        setAnalysisResult(result);
+        setActiveTab("results");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Manual analysis failed");
+    } finally {
+      setIsProcessing(false);
     }
-
-    console.log("Calling buildAnalysisResult");
-    const result = await buildAnalysisResult(claim);
-    console.log("buildAnalysisResult result:", result);
-
-    if (result) {
-      setAnalysisResult(result);
-      setActiveTab("results");
-    }
-  } catch (err) {
-    console.error("handleManualAnalyze error:", err);
-    setError(err instanceof Error ? err.message : "Manual analysis failed");
-  } finally {
-    setIsProcessing(false);
-  }
-}, [claim, buildAnalysisResult]);
-
-  const handleFileUpload = useCallback(
+  }, [claim, buildAnalysisResult]);
+    const handleFileUpload = useCallback(
     async (file: File) => {
       setIsProcessing(true);
       setError(null);
@@ -241,7 +214,7 @@ function App() {
         }
 
         if (parseResult.claims.length === 1) {
-          const claimData = parseResult.claims[0] as ClaimData;
+          const claimData = parseResult.claims as ClaimData;
           setClaim(claimData);
 
           const result = await buildAnalysisResult(claimData);
@@ -460,3 +433,4 @@ function App() {
 }
 
 export default App;
+
