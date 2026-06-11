@@ -3,7 +3,7 @@ name: Deploy React App
 on:
   push:
     branches:
-      - main  # Triggers the build whenever you push to your main branch
+      - main
 
 permissions:
   contents: write
@@ -18,15 +18,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-size: 20
+          node-version: 20
 
-      - name: Install Dependencies & Build
-        run: |
-          npm install --legacy-peer-deps
-          npm run build
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Force Direct Vite Build
+        run: node node_modules/vite/bin/vite.js build
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist  # Vite outputs production files into the 'dist' folder
+          folder: dist
           branch: gh-pages
