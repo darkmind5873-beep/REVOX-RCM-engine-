@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  base: '/REVOX-RCM-engine-/', // 👈 Fixed the blank screen pathing
   server: {
     proxy: {
       '/predict': {
