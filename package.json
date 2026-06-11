@@ -6,7 +6,7 @@
   "homepage": "https://YOUR_GITHUB_USERNAME.github.io/REVOX-RCM-engine-",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npx vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
